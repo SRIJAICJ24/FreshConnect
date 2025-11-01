@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Order #{{ order.order_id }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <p><strong>Order Date:</strong><br>{{ order.created_at.strftime('%d %b %Y at %H:%M') }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Status:</strong><br>
+                                {% if order.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif order.status == 'confirmed' %}
+                                <span class="badge bg-success">Confirmed</span>
+                                {% elif order.status == 'delivered' %}
+                                <span class="badge bg-success">Delivered</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <h5>Order Items</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Vendor</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ item.product.product_name }}</strong><br>
+                                        <small class="text-muted">{{ item.product.category }}</small>
+                                    </td>
+                                    <td>{{ item.product.vendor.business_name }}</td>
+                                    <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td>₹{{ "%.2f"|format(item.price_at_purchase) }}</td>
+                                    <td>₹{{ "%.2f"|format(item.subtotal) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-end">Total:</th>
+                                    <th>₹{{ "%.2f"|format(order.total_amount) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <hr>
+
+                    <h5>Delivery Information</h5>
+                    <p>
+                        <strong>Address:</strong><br>
+                        {{ order.delivery_address }}<br>
+                        {{ order.delivery_city }}, {{ order.delivery_pincode }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if order.payment %}
+                    <p><strong>Transaction ID:</strong><br>{{ order.payment.transaction_id }}</p>
+                    <p><strong>Status:</strong><br>
+                        {% if order.payment.payment_status == 'success' %}
+                        <span class="badge bg-success">Paid</span>
+                        {% elif order.payment.payment_status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% else %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Amount:</strong><br>₹{{ "%.2f"|format(order.payment.amount) }}</p>
+                    <p><strong>Payment Date:</strong><br>{{ order.payment.initiated_at.strftime('%d %b %Y %H:%M') }}</p>
+                    {% else %}
+                    <p class="text-muted">Payment information not available</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Order Placed</strong><br>
+                        <small class="text-muted">{{ order.created_at.strftime('%d %b, %H:%M') }}</small>
+                    </div>
+
+                    {% if order.confirmed_at %}
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Order Confirmed</strong><br>
+                        <small class="text-muted">{{ order.confirmed_at.strftime('%d %b, %H:%M') }}</small>
+                    </div>
+                    {% endif %}
+
+                    {% if order.delivered_at %}
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <strong>Delivered</strong><br>
+                        <small class="text-muted">{{ order.delivered_at.strftime('%d %b, %H:%M') }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-3">
+                <a href="{{ url_for('retailer.orders') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

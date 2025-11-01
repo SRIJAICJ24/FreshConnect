@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Driver Dashboard - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Driver Dashboard</h2>
+            <p class="text-muted">Welcome, {{ current_user.name }}!</p>
+        </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-{% if driver.status == 'available' %}success{% elif driver.status == 'on_delivery' %}primary{% else %}secondary{% endif %}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4>Current Status: 
+                                <span class="badge bg-{% if driver.status == 'available' %}success{% elif driver.status == 'on_delivery' %}primary{% else %}secondary{% endif %} fs-5">
+                                    {{ driver.status.upper().replace('_', ' ') }}
+                                </span>
+                            </h4>
+                            <p class="mb-0">
+                                <strong>Vehicle:</strong> {{ driver.vehicle_type.title() }} ({{ driver.vehicle_registration }})<br>
+                                <strong>Capacity:</strong> {{ driver.vehicle_capacity_kg }}kg<br>
+                                <strong>Location:</strong> {{ driver.current_location }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <form method="POST" action="{{ url_for('driver.toggle_status') }}">
+                                {% if driver.status == 'available' %}
+                                <button type="submit" class="btn btn-warning btn-lg">
+                                    <i class="fas fa-pause"></i> Go OFF DUTY
+                                </button>
+                                {% elif driver.status == 'off_duty' %}
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-play"></i> Go AVAILABLE
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-secondary btn-lg" disabled>
+                                    <i class="fas fa-truck"></i> On Delivery
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Pending Assignments</h6>
+                    <h2 class="text-warning">{{ pending_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Active Deliveries</h6>
+                    <h2 class="text-primary">{{ active_assignments|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Completed Today</h6>
+                    <h2 class="text-success">{{ completed_today }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Earnings</h6>
+                    <h2 class="text-info">₹{{ "%.0f"|format(driver.total_earnings) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Performance</h5>
+                    <div class="mb-2">
+                        <strong>Rating:</strong> 
+                        <span class="text-warning">
+                            {% for i in range(driver.rating|int) %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {{ "%.1f"|format(driver.rating) }}/5.0
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Total Deliveries:</strong> {{ driver.total_deliveries }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Success Rate:</strong> 
+                        {% if driver.total_deliveries > 0 %}
+                        {{ ((driver.successful_deliveries / driver.total_deliveries) * 100)|int }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <a href="{{ url_for('driver.assignments') }}" class="btn btn-primary w-100 mb-2">
+                        <i class="fas fa-list"></i> View All Assignments
+                    </a>
+                    <a href="{{ url_for('driver.earnings') }}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-money-bill"></i> View Earnings
+                    </a>
+                    <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Deliveries -->
+    {% if active_assignments %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-truck-loading"></i> Active Deliveries</h5>
+                </div>
+                <div class="card-body">
+                    {% for assignment in active_assignments %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6><strong>Order #{{ assignment.order.order_id }}</strong></h6>
+                                    <p class="mb-1">
+                                        <strong>Customer:</strong> {{ assignment.order.retailer.name }}<br>
+                                        <strong>Delivery To:</strong> {{ assignment.order.delivery_address }}, {{ assignment.order.delivery_city }}<br>
+                                        <strong>Status:</strong> 
+                                        <span class="badge bg-{% if assignment.status == 'picked_up' %}info{% else %}primary{% endif %}">
+                                            {{ assignment.status.replace('_', ' ').title() }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a href="{{ url_for('driver.assignment_detail', assignment_id=assignment.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

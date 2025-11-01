@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Retailer Dashboard - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>Welcome, {{ current_user.name }}!</h2>
+            <p class="text-muted">{{ current_user.business_name or 'Retailer' }}</p>
+        </div>
+    </div>
+
+    <!-- Credit Score Card -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}">
+                <div class="card-body">
+                    <h5 class="card-title">Credit Score</h5>
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <h1 class="display-4 text-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}">
+                                {{ credit.credit_score }}
+                            </h1>
+                            <p class="mb-0">out of 1000</p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="badge bg-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }} fs-4">
+                                {{ credit.credit_tier.upper() }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar bg-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}" 
+                             style="width: {{ (credit.credit_score / 1000 * 100)|int }}%;">
+                            {{ (credit.credit_score / 1000 * 100)|int }}%
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('retailer.credit_dashboard') }}" class="btn btn-sm btn-outline-primary">View Benefits</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Purchase Summary</h5>
+                    <div class="mb-2">
+                        <strong>Total Orders:</strong> {{ credit.total_orders }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Total Purchases:</strong> ₹{{ "%.2f"|format(credit.total_purchases) }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Success Rate:</strong> 
+                        {% if credit.total_orders > 0 %}
+                        {{ ((credit.successful_orders / credit.total_orders) * 100)|int }}%
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <a href="{{ url_for('retailer.browse') }}" class="btn btn-success me-2">
+                        <i class="fas fa-shopping-cart"></i> Browse Products
+                    </a>
+                    <a href="{{ url_for('retailer.cart') }}" class="btn btn-outline-success me-2">
+                        <i class="fas fa-shopping-bag"></i> View Cart
+                    </a>
+                    <a href="{{ url_for('retailer.orders') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-box"></i> My Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browse by Category -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Browse by Category</h4>
+        </div>
+        {% for category, count in categories %}
+        <div class="col-md-3 mb-3">
+            <a href="{{ url_for('retailer.browse', category=category[0]) }}" class="text-decoration-none">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ category[0] }}</h5>
+                        <p class="text-muted">{{ count[1] }} products</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Orders -->
+    {% if orders %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td><strong>{{ order.order_id }}</strong></td>
+                                    <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif order.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                        {% elif order.status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('retailer.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+/* FreshConnect Custom Styles */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.text-success {
+    color: #28a745 !important;
+}
+
+/* Dashboard Styles */
+.dashboard-card {
+    border-left: 4px solid #28a745;
+}
+
+.stats-card {
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.stats-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* Product Card */
+.product-card {
+    height: 100%;
+}
+
+.product-image {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Badge Styles */
+.badge-emergency {
+    background-color: #dc3545;
+}
+
+.badge-moq {
+    background-color: #17a2b8;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+}

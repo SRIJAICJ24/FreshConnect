@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Dashboard - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <h2 class="mb-4">Credit Dashboard</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}">
+                <div class="card-body">
+                    <h3 class="card-title">Your Credit Score</h3>
+                    <div class="text-center my-4">
+                        <h1 class="display-1 text-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}">
+                            {{ credit.credit_score }}
+                        </h1>
+                        <p class="text-muted">out of 1000</p>
+                    </div>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar bg-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}" 
+                             style="width: {{ (credit.credit_score / 1000 * 100)|int }}%;">
+                            {{ (credit.credit_score / 1000 * 100)|int }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Current Tier</h3>
+                    <div class="text-center my-4">
+                        <span class="badge bg-{{ 'warning' if credit.credit_tier == 'bronze' else 'secondary' if credit.credit_tier == 'silver' else 'warning' if credit.credit_tier == 'gold' else 'primary' }}" style="font-size: 3rem;">
+                            {{ credit.credit_tier.upper() }}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Total Orders:</strong> {{ credit.total_orders }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Successful Orders:</strong> {{ credit.successful_orders }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Total Purchases:</strong> ₹{{ "%.2f"|format(credit.total_purchases) }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Priority Level:</strong> {{ credit.priority_level }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Your Benefits</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for benefit in benefits %}
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {{ benefit }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Credit Tier Breakdown</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h5 class="text-warning">BRONZE</h5>
+                                    <p class="text-muted">0 - 250</p>
+                                    <small>Basic Access</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-body text-center">
+                                    <h5 class="text-secondary">SILVER</h5>
+                                    <p class="text-muted">251 - 500</p>
+                                    <small>5% Discounts</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <h5 class="text-warning">GOLD</h5>
+                                    <p class="text-muted">501 - 750</p>
+                                    <small>10% Discounts + Free Delivery</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <h5 class="text-primary">PLATINUM</h5>
+                                    <p class="text-muted">751 - 1000</p>
+                                    <small>15% Discounts + Net-60 Terms</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-lightbulb"></i> How to Improve Your Score</h5>
+                <ul class="mb-0">
+                    <li>Place more orders regularly</li>
+                    <li>Make timely payments</li>
+                    <li>Complete all orders successfully</li>
+                    <li>Increase your purchase volume</li>
+                    <li>Maintain good relationship with vendors</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

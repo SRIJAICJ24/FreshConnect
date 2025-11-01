@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card border-primary">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Users</h6>
+                    <h2 class="text-primary">{{ total_users }}</h2>
+                    <small class="text-muted">All registered users</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-success">
+                <div class="card-body">
+                    <h6 class="text-muted">Vendors</h6>
+                    <h2 class="text-success">{{ vendors }}</h2>
+                    <small class="text-muted">Active wholesalers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-info">
+                <div class="card-body">
+                    <h6 class="text-muted">Retailers</h6>
+                    <h2 class="text-info">{{ retailers }}</h2>
+                    <small class="text-muted">Registered buyers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card border-warning">
+                <div class="card-body">
+                    <h6 class="text-muted">Companies</h6>
+                    <h2 class="text-warning">{{ companies }}</h2>
+                    <small class="text-muted">Brand partners</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product & Order Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Products</h6>
+                    <h2>{{ total_products }}</h2>
+                    <small class="text-success">{{ active_products }} active</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <h6 class="text-muted">Emergency Products</h6>
+                    <h2 class="text-danger">{{ emergency_products }}</h2>
+                    <small class="text-muted">Near expiry</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Orders</h6>
+                    <h2>{{ total_orders }}</h2>
+                    <small class="text-warning">{{ pending_orders }} pending</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Revenue</h6>
+                    <h2 class="text-success">₹{{ "%.0f"|format(total_revenue) }}</h2>
+                    <small class="text-muted">{{ completed_orders }} completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Actions</h5>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                    <a href="{{ url_for('admin.products') }}" class="btn btn-success me-2">
+                        <i class="fas fa-box"></i> View Products
+                    </a>
+                    <a href="{{ url_for('admin.orders') }}" class="btn btn-info me-2">
+                        <i class="fas fa-shopping-cart"></i> View Orders
+                    </a>
+                    <a href="{{ url_for('admin.analytics') }}" class="btn btn-warning">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products by Category -->
+    {% if categories %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Products by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Retailer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders[:5] %}
+                                <tr>
+                                    <td><small>{{ order.order_id }}</small></td>
+                                    <td><small>{{ order.retailer.name }}</small></td>
+                                    <td><small>₹{{ "%.0f"|format(order.total_amount) }}</small></td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif order.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+{% if categories %}
+const ctx = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for cat in categories %}'{{ cat[0] }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for cat in categories %}{{ cat[1] }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.7)',
+                'rgba(54, 162, 235, 0.7)',
+                'rgba(255, 206, 86, 0.7)',
+                'rgba(75, 192, 192, 0.7)',
+                'rgba(153, 102, 255, 0.7)',
+                'rgba(255, 159, 64, 0.7)',
+                'rgba(199, 199, 199, 0.7)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

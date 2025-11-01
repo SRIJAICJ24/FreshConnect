@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Manage Users</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('admin.users', type='all') }}" class="btn btn-outline-primary {% if user_type == 'all' %}active{% endif %}">All</a>
+                <a href="{{ url_for('admin.users', type='vendor') }}" class="btn btn-outline-success {% if user_type == 'vendor' %}active{% endif %}">Vendors</a>
+                <a href="{{ url_for('admin.users', type='retailer') }}" class="btn btn-outline-info {% if user_type == 'retailer' %}active{% endif %}">Retailers</a>
+                <a href="{{ url_for('admin.users', type='company') }}" class="btn btn-outline-warning {% if user_type == 'company' %}active{% endif %}">Companies</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>User Type</th>
+                            <th>Business</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if user.user_type == 'admin' else 'success' if user.user_type == 'vendor' else 'info' if user.user_type == 'retailer' else 'warning' }}">
+                                    {{ user.user_type.upper() }}
+                                </span>
+                            </td>
+                            <td>{{ user.business_name or user.company_name or '-' }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                                {% if user.is_verified %}
+                                <span class="badge bg-primary">Verified</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}">
+                                        {% if user.is_active %}
+                                        <i class="fas fa-ban"></i> Deactivate
+                                        {% else %}
+                                        <i class="fas fa-check"></i> Activate
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

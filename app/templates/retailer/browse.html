@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Products - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Browse Products</h2>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('retailer.browse') }}" class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Search products..." value="{{ search }}">
+                <button class="btn btn-success" type="submit">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="btn-group w-100" role="group">
+                <a href="{{ url_for('retailer.browse') }}" class="btn btn-outline-success {% if not current_category %}active{% endif %}">
+                    All Categories
+                </a>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                        {{ current_category or 'Filter by Category' }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for category in categories %}
+                        <li><a class="dropdown-item" href="{{ url_for('retailer.browse', category=category) }}">{{ category }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    {% if products.items %}
+    <div class="row g-4">
+        {% for product in products.items %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ product.product_name }}</h5>
+                        {% if product.is_emergency %}
+                        <span class="badge bg-danger">{{ product.discount_percentage }}% OFF</span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-muted">{{ product.category }}</p>
+                    <p class="card-text">{{ product.description or 'Fresh and quality product' }}</p>
+                    
+                    <div class="mb-2">
+                        {% if product.is_emergency %}
+                        <div>
+                            <span class="text-success fs-4">₹{{ "%.2f"|format(product.price * (1 - product.discount_percentage/100)) }}</span>
+                            <small class="text-muted"><del>₹{{ "%.2f"|format(product.price) }}</del></small>
+                        </div>
+                        {% else %}
+                        <span class="text-success fs-4">₹{{ "%.2f"|format(product.price) }}</span>
+                        {% endif %}
+                        <span class="text-muted">/{{ product.unit }}</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Available: {{ product.quantity }} {{ product.unit }}</small>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Vendor: {{ product.vendor.business_name }}</small>
+                    </div>
+                    
+                    {% if product.moq_enabled %}
+                    <div class="alert alert-info py-2 mb-2">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            <strong>MOQ:</strong> 
+                            {% if product.moq_type == 'quantity' %}
+                            Min {{ product.minimum_quantity }} units
+                            {% elif product.moq_type == 'weight' %}
+                            Min {{ product.minimum_weight }}kg
+                            {% else %}
+                            Min {{ product.minimum_quantity }} units & {{ product.minimum_weight }}kg
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    {% if product.is_emergency %}
+                    <div class="alert alert-warning py-2 mb-2">
+                        <small><i class="fas fa-clock"></i> Expires: {{ product.expiry_date.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{{ url_for('retailer.add_to_cart', product_id=product.id) }}" class="add-to-cart-form">
+                        <div class="input-group mb-2">
+                            <input type="number" class="form-control" name="quantity" value="{{ product.minimum_quantity or 1 }}" min="1" required>
+                            <span class="input-group-text">{{ product.unit }}</span>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-cart-plus"></i> Add to Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if products.pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if products.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('retailer.browse', page=products.prev_num, category=current_category, search=search) }}">Previous</a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if page_num == products.page %}
+                    <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('retailer.browse', page=page_num, category=current_category, search=search) }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if products.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('retailer.browse', page=products.next_num, category=current_category, search=search) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="alert alert-info">
+        <h5>No products found</h5>
+        <p>Try adjusting your search or filter criteria.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.add-to-cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to add to cart');
+        });
+    });
+});
+</script>
+{% endblock %}

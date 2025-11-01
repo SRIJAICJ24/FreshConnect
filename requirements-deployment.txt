@@ -1,0 +1,5 @@
+# Optional packages for deployment only
+# Install these ONLY when deploying to production servers
+
+gunicorn==21.2.0
+psycopg2-binary==2.9.9

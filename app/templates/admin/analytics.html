@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <h2 class="mb-4">Analytics Dashboard</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Revenue Over Time (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if daily_revenue %}
+                    <canvas id="revenueChart"></canvas>
+                    {% else %}
+                    <p class="text-muted">No revenue data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top 10 Vendors by Revenue</h5>
+                </div>
+                <div class="card-body">
+                    {% if top_vendors %}
+                    <canvas id="vendorChart"></canvas>
+                    {% else %}
+                    <p class="text-muted">No vendor data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Vendors</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Vendor Name</th>
+                                    <th>Total Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vendor in top_vendors %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ vendor[0] }}</td>
+                                    <td>₹{{ "%.2f"|format(vendor[1]) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+{% if daily_revenue %}
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for item in daily_revenue %}'{{ item[0] }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: [{% for item in daily_revenue %}{{ item[1] }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if top_vendors %}
+// Vendor Chart
+const vendorCtx = document.getElementById('vendorChart').getContext('2d');
+new Chart(vendorCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for vendor in top_vendors %}'{{ vendor[0] }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: [{% for vendor in top_vendors %}{{ vendor[1] }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

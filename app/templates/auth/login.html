@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Login - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Login to FreshConnect</h2>
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Login</button>
+                    </form>
+                    <hr class="my-4">
+                    <p class="text-center">Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a></p>
+                    
+                    <div class="alert alert-info mt-4">
+                        <strong>Test Credentials:</strong><br>
+                        <small>
+                            Admin: admin@freshconnect.com / admin123<br>
+                            Vendor: vendor1@freshconnect.com / vendor123<br>
+                            Retailer: retailer1@freshconnect.com / retailer123
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
